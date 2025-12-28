@@ -1,7 +1,156 @@
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
+  const router = useRouter();
+
+  const handleViewSampleReport = () => {
+    // Create a sample analysis result
+    const sampleReport = {
+      fileName: "sample-code.js",
+      totalSmells: 12,
+      smells: [
+        {
+          id: "smell-1",
+          type: "Long Method",
+          description: "Function 'processData' is 45 lines long (threshold: 30)",
+          line: 12,
+          file: "sample-code.js",
+          category: "BLOATERS",
+          severity: "CRITICAL"
+        },
+        {
+          id: "smell-2",
+          type: "Large Class",
+          description: "Class 'DataManager' is 250 lines (threshold: 200). Too many responsibilities.",
+          line: 5,
+          file: "sample-code.js",
+          category: "BLOATERS",
+          severity: "MAJOR"
+        },
+        {
+          id: "smell-3",
+          type: "Long Parameter List",
+          description: "Function 'calculateMetrics' has 7 parameters (threshold: 5)",
+          line: 78,
+          file: "sample-code.js",
+          category: "BLOATERS",
+          severity: "MAJOR"
+        },
+        {
+          id: "smell-4",
+          type: "Duplicate Code",
+          description: "Code duplication detected at line 95. Extract to a common function.",
+          line: 95,
+          file: "sample-code.js",
+          category: "DISPENSABLES",
+          severity: "MINOR"
+        },
+        {
+          id: "smell-5",
+          type: "Dead Code",
+          description: "Variable 'tempResult' is declared but never used.",
+          line: 42,
+          file: "sample-code.js",
+          category: "DISPENSABLES",
+          severity: "MINOR"
+        },
+        {
+          id: "smell-6",
+          type: "Switch Statements",
+          description: "Switch statement with 8 cases. Consider using polymorphism instead.",
+          line: 110,
+          file: "sample-code.js",
+          category: "OBJECT-ORIENTATION_ABUSERS",
+          severity: "MAJOR"
+        },
+        {
+          id: "smell-7",
+          type: "Feature Envy",
+          description: "Method 'validateInput' is too interested in another object's data. Consider moving it.",
+          line: 156,
+          file: "sample-code.js",
+          category: "COUPLERS",
+          severity: "MAJOR"
+        },
+        {
+          id: "smell-8",
+          type: "Message Chains",
+          description: "Long message chain detected: 'user.getProfile().getSettings().getPreferences()'. Break it down.",
+          line: 203,
+          file: "sample-code.js",
+          category: "COUPLERS",
+          severity: "MAJOR"
+        },
+        {
+          id: "smell-9",
+          type: "Divergent Change",
+          description: "Class 'Handler' has 3 different reasons to change (SRP violation).",
+          line: 25,
+          file: "sample-code.js",
+          category: "CHANGE_PREVENTERS",
+          severity: "CRITICAL"
+        },
+        {
+          id: "smell-10",
+          type: "Shotgun Surgery",
+          description: "Found 6 scattered status checks across the code. Centralize this logic.",
+          line: 1,
+          file: "sample-code.js",
+          category: "CHANGE_PREVENTERS",
+          severity: "MAJOR"
+        },
+        {
+          id: "smell-11",
+          type: "Data Class",
+          description: "Class 'User' is just a data container. Move business logic here or use a plain object.",
+          line: 89,
+          file: "sample-code.js",
+          category: "DISPENSABLES",
+          severity: "MINOR"
+        },
+        {
+          id: "smell-12",
+          type: "Primitive Obsession",
+          description: "Use of multiple numeric properties instead of creating a proper object",
+          line: 134,
+          file: "sample-code.js",
+          category: "BLOATERS",
+          severity: "MINOR"
+        }
+      ],
+      categories: {
+        BLOATERS: 4,
+        "OBJECT-ORIENTATION_ABUSERS": 1,
+        CHANGE_PREVENTERS: 2,
+        DISPENSABLES: 3,
+        COUPLERS: 2
+      },
+      metrics: {
+        filesScanned: 1,
+        totalLines: 256,
+        avgComplexity: 6.2,
+        refactorCandidates: 4,
+        severityCounts: {
+          CRITICAL: 2,
+          MAJOR: 6,
+          MINOR: 4
+        }
+      },
+      timestamp: new Date().toISOString(),
+      isSample: true
+    };
+
+    // Store the sample report in localStorage
+    localStorage.setItem("analysisResult", JSON.stringify(sampleReport));
+    
+    // Navigate to analyze page
+    router.push("/analyze");
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative font-['Poppins']" style={{ backgroundColor: '#121621' }}>
       {/* Header */}
@@ -51,7 +200,7 @@ export default function HomePage() {
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link 
-                href="/analyze"
+                href="/upload"
                 className="flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-white transition-all hover:opacity-90"
                 style={{ backgroundColor: '#195DE6' }}
               >
@@ -73,7 +222,8 @@ export default function HomePage() {
               </Link>
               
               <button 
-                className="flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-white transition-all hover:opacity-90 border border-gray-600"
+                onClick={handleViewSampleReport}
+                className="flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-white transition-all hover:opacity-90 border border-gray-600 cursor-pointer"
                 style={{ backgroundColor: '#1E2430' }}
               >
                 <svg 
