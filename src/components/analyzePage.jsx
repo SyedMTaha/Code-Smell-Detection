@@ -39,16 +39,34 @@ export default function AnalyzePage() {
 		setLoading(false);
 	}, []);
 
-	// Function to scroll to specific line in code viewer
-	const scrollToLine = (lineNumber) => {
+	// Function to scroll to specific line in code viewer and highlight a range
+	const scrollToLine = (lineNumber, endLineNumber = null) => {
 		if (codeViewerRef.current) {
-			const lineElement = document.getElementById(`line-${lineNumber}`);
-			if (lineElement) {
-				lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				// Highlight the line
-				const allLines = codeViewerRef.current.querySelectorAll('.code-line');
-				allLines.forEach(line => line.classList.remove('bg-yellow-500/20'));
-				lineElement.classList.add('bg-yellow-500/20');
+			const startLineElement = document.getElementById(`line-${lineNumber}`);
+			
+			// Remove previous highlights
+			const allLines = codeViewerRef.current.querySelectorAll('.code-line');
+			allLines.forEach(line => line.classList.remove('bg-blue-900/50'));
+			
+			// If we have a range to highlight
+			if (endLineNumber && endLineNumber !== lineNumber) {
+				// Highlight all lines in the range
+				for (let i = lineNumber; i <= endLineNumber; i++) {
+					const lineElement = document.getElementById(`line-${i}`);
+					if (lineElement) {
+						lineElement.classList.add('bg-blue-900/50');
+					}
+				}
+				// Scroll to the start of the range
+				if (startLineElement) {
+					startLineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				}
+			} else {
+				// Just highlight a single line
+				if (startLineElement) {
+					startLineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+					startLineElement.classList.add('bg-blue-900/50');
+				}
 			}
 		}
 	};
@@ -56,8 +74,43 @@ export default function AnalyzePage() {
 	// Handle smell selection
 	const handleSmellSelect = (smell) => {
 		setSelectedSmell(smell);
-		// Scroll to the line after a small delay to ensure DOM is ready
-		setTimeout(() => scrollToLine(smell.line), 100);
+		
+		// Calculate the range of lines to highlight based on smell type
+		const startLine = smell.line;
+		let endLine = smell.line;
+		
+		// Determine how many lines to highlight based on smell type
+		switch(smell.type) {
+			case 'Long Method':
+			case 'Large Class':
+				// For long methods/classes, try to determine the actual range
+				const linesMatch = smell.description.match(/(\d+) lines/);
+				if (linesMatch) {
+					const lineCount = parseInt(linesMatch[1]);
+					endLine = Math.min(startLine + lineCount - 1, codeLines.length);
+				} else {
+					// Default range for long items
+					endLine = Math.min(startLine + 10, codeLines.length);
+				}
+				break;
+			case 'Duplicate Code':
+				// For duplicate code, highlight the specific block
+				endLine = Math.min(startLine + 5, codeLines.length); // Typical duplicate block size
+				break;
+			case 'Long Conditional':
+			case 'Large Switch Statement':
+			case 'Deep Nesting':
+				// For conditional blocks, highlight a range
+				endLine = Math.min(startLine + 8, codeLines.length);
+				break;
+			default:
+				// For single-line smells, just highlight the specific line
+				endLine = startLine;
+				break;
+		}
+		
+		// Scroll to and highlight the range after a small delay to ensure DOM is ready
+		setTimeout(() => scrollToLine(startLine, endLine), 100);
 	};
 
 	if (loading) {
