@@ -7,28 +7,64 @@ export default function UploadPage() {
 	const router = useRouter();
 	const [uploadedFile, setUploadedFile] = useState(null);
 	const [isUploading, setIsUploading] = useState(false);
+	const [error, setError] = useState(null);
 
 	const simulateUploadProgress = async (ms = 1500) =>
 		new Promise((resolve) => setTimeout(resolve, ms));
 
-	const startAnalysis = async () => {
-		// Placeholder: In a real app, run analysis and store results in state or server.
-		return Promise.resolve();
+	const startAnalysis = async (file) => {
+		try {
+			const fileContent = await file.text();
+			
+			// Send to API for analysis
+			const response = await fetch("/api/analyze", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					code: fileContent,
+					fileName: file.name,
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error("Analysis failed");
+			}
+
+			const analysisResult = await response.json();
+			
+			// Store in localStorage for retrieve in analyze page
+			localStorage.setItem("analysisResult", JSON.stringify(analysisResult));
+			
+			return analysisResult;
+		} catch (err) {
+			console.error("Error analyzing file:", err);
+			setError("Failed to analyze file. Please try again.");
+			throw err;
+		}
 	};
 
 	const handleFileChange = (e) => {
 		const file = e.target.files?.[0] ?? null;
 		setUploadedFile(file);
+		setError(null);
 	};
 
 	const handleAnalysis = async () => {
 		if (!uploadedFile || isUploading) return;
 		setIsUploading(true);
-		await simulateUploadProgress(2000);
-		await startAnalysis();
-		setIsUploading(false);
-		// Navigate to a results or analyze page (adjust if you add /results route)
-		router.push("/analyze");
+		setError(null);
+		
+		try {
+			await simulateUploadProgress(2000);
+			await startAnalysis(uploadedFile);
+			setIsUploading(false);
+			// Navigate to analyze page
+			router.push("/analyze");
+		} catch (err) {
+			setIsUploading(false);
+		}
 	};
 
 	return (
@@ -36,8 +72,8 @@ export default function UploadPage() {
 			{/* Back Button */}
 			<div className="px-4 sm:px-6 py-4 sm:py-6">
 				<button
-					onClick={() => router.back()}
-					className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm"
+					onClick={() => router.push("/")}
+					className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm cursor-pointer"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
 						<line x1="19" y1="12" x2="5" y2="12"></line>
@@ -46,6 +82,16 @@ export default function UploadPage() {
 					Back
 				</button>
 			</div>
+
+			{/* Error Alert */}
+			{error && (
+				<div className="max-w-4xl mx-auto w-full px-4 sm:px-6 mb-6">
+					<div className="rounded-lg bg-red-900/30 border border-red-700/50 p-4 text-red-300 text-sm">
+						{error}
+					</div>
+				</div>
+			)}
+
 			{/* Page Content */}
 			<section className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 lg:py-20 flex flex-col items-center justify-center">
 				{/* Header */}
@@ -76,11 +122,25 @@ export default function UploadPage() {
 										<polyline points="7 10 12 5 17 10" />
 										<line x1="12" y1="5" x2="12" y2="15" />
 									</svg>
-									<p className="text-slate-300 text-sm sm:text-base">
-										Click to select a file or drag and drop
-									</p>
-									{uploadedFile && (
-										<p className="text-slate-400 text-xs">Selected: {uploadedFile.name}</p>
+									{!uploadedFile ? (
+										<>
+											<p className="text-slate-300 text-sm sm:text-base">
+												Click to select a file or drag and drop
+											</p>
+										</>
+									) : (
+										<div className="w-full flex flex-col items-center gap-3">
+											<div className="flex items-center gap-2 text-green-400">
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+													<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+												</svg>
+												<span className="font-semibold text-sm">File Selected</span>
+											</div>
+											<p className="text-white font-semibold text-base break-words max-w-xs">{uploadedFile.name}</p>
+											<p className="text-slate-400 text-xs">
+												{(uploadedFile.size / 1024).toFixed(2)} KB • Ready to analyze
+											</p>
+										</div>
 									)}
 								</div>
 							</div>
@@ -93,7 +153,7 @@ export default function UploadPage() {
 								disabled={!uploadedFile || isUploading}
 								className={`w-full px-6 sm:px-8 py-3 sm:py-4 font-bold text-base sm:text-lg rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
 									uploadedFile && !isUploading
-										? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+										? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg cursor-pointer"
 										: "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60"
 								}`}
 							>
