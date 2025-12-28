@@ -1,0 +1,184 @@
+================================================================================
+GAMMA.AI PRESENTATION PROMPT - CODE SMELL DETECTION WEBSITE
+================================================================================
+
+Create a professional university presentation for the "Code Smell Detection Website" project with the following specifications:
+
+DESIGN REQUIREMENTS:
+- Use a minimalistic design approach with clean, simple layouts
+- Color Palette: Dark background (navy/dark blue #1a1f3a or black) with white/light text and accent colors (blue #3b82f6, red #ef4444 for severity indicators)
+- Font: Modern sans-serif (preferably Poppins, Inter, or similar clean fonts)
+- No busy backgrounds - use solid colors or very subtle gradients
+- Whitespace-heavy design with minimal visual clutter
+- Icons only when necessary for clarity
+- Consistent spacing and alignment throughout
+- Tables with borders for data presentation
+- Use color coding for severity levels: Red (Critical), Orange (Major), Yellow (Minor)
+
+SLIDE STRUCTURE (15-18 slides):
+
+SLIDE 1 - TITLE SLIDE
+- Title: "Code Smell Detection Website"
+- Subtitle: "Automated Code Quality Analysis Tool"
+- Additional info: Course: Software Requirements Engineering (SRE), Semester 7
+- Minimalistic: Large title text centered, one accent color element
+
+SLIDE 2 - WHAT IS CODE SMELL?
+- Definition: Surface-level indicators of deeper design problems in code
+- Brief explanation: Code works but indicates design issues
+- Why it matters: Technical debt, maintainability, future refactoring
+- Visual: Simple arrow showing progression from code smell to problem
+
+SLIDE 3 - PROJECT OVERVIEW
+- Purpose: Automated tool to identify and analyze code quality issues
+- Key Features bullet points:
+  - Multi-language support (JavaScript, TypeScript, Python)
+  - Categorized detection into 5 established categories
+  - Severity-based classification
+  - Web-based interface for accessibility
+  - Comprehensive PDF reports
+- Visual: Simple icons representing key features
+
+SLIDE 4 - PROJECT OBJECTIVES
+- Automated Detection of code smells
+- Multi-Language Support (JS/TS and Python)
+- Categorized Analysis (5 main categories)
+- Severity Classification (Critical, Major, Minor)
+- User-Friendly Interface
+- Comprehensive Reporting
+- PDF Export Capability
+- Layout: Numbered list, one objective per line
+
+SLIDE 5 - SYSTEM ARCHITECTURE
+- Show simplified architecture diagram:
+  - User Interface Layer (Frontend)
+  - API Layer (Backend)
+  - Core Analysis Engine
+  - Utility Layer
+- Data flow arrows showing progression
+- Keep it clean and minimalistic
+
+SLIDE 6 - TECHNOLOGY STACK
+- Frontend: Next.js 16.1.1, React 19.2.3, Tailwind CSS v4
+- Backend: Node.js (Next.js API Routes), Serverless architecture
+- Build Tools: Webpack, Babel, ESLint v9
+- Storage: Browser localStorage for session management
+- Display as simple grouped list with category headers
+
+SLIDE 7 - CODE SMELL CATEGORIES (PART 1)
+- BLOATERS: Code that has grown too large
+  - Long Methods, Large Classes, Primitive Obsession
+  - Long Parameter Lists, Data Clumps
+- Visual: Simple category title with subcategories listed
+
+SLIDE 8 - CODE SMELL CATEGORIES (PART 2)
+- OBJECT-ORIENTATION ABUSERS: Improper OOP usage
+  - Switch Statements, Temporary Fields, Refused Bequest
+- Visual: Same minimalistic style as slide 7
+
+SLIDE 9 - CODE SMELL CATEGORIES (PART 3)
+- CHANGE PREVENTERS: Structures preventing easy changes
+  - Divergent Change, Shotgun Surgery, Parallel Inheritance Hierarchies
+- DISPENSABLES: Code serving no purpose
+  - Dead Code, Duplicate Code, Lazy Classes, Comments
+
+SLIDE 10 - CODE SMELL CATEGORIES (PART 4)
+- COUPLERS: Excessive dependencies between modules
+  - Feature Envy, Inappropriate Intimacy, Message Chains
+  - Middle Man, Alien Data Types
+
+SLIDE 11 - KEY FEATURES & FUNCTIONALITY
+- HOME PAGE: Introduction and sample reports
+- UPLOAD PAGE: File upload with real-time validation
+- ANALYSIS PAGE: Interactive results with code viewer and highlighting
+- PDF EXPORT: Generate professional reports
+- Display: Feature breakdown with brief descriptions
+
+SLIDE 12 - HOW IT WORKS (USER FLOW)
+- Step 1: Upload Code File
+- Step 2: Automated Analysis Processing
+- Step 3: Results Categorization and Classification
+- Step 4: Interactive Results Visualization
+- Step 5: PDF Report Export
+- Visual: Simple numbered flow diagram with arrows
+
+SLIDE 13 - DETECTION ALGORITHM
+- Language Detection: File extension-based (.js, .py, etc.)
+- Pattern Matching: Regex and text parsing for structural issues
+- Heuristic Analysis: Threshold-based detection
+- Static Code Analysis: No execution required, fast and safe
+- Show example: "Long Method Detection: Count lines in function, flag if > 50 lines"
+
+SLIDE 14 - SEVERITY LEVELS & METRICS
+- Severity Color Coding:
+  - CRITICAL (Red): Major issues affecting quality significantly - Address immediately
+  - MAJOR (Orange): Significant issues - Address in near term
+  - MINOR (Yellow): Minor issues - Can be addressed during refactoring
+- Key Metrics: Total Smells, Files Scanned, Total Lines, Average Complexity, Refactor Candidates
+- Display as simple legend with color squares
+
+SLIDE 15 - SAMPLE ANALYSIS RESULTS
+- Show example output:
+  - Total Code Smells: 12
+  - Critical Issues: 2
+  - Major Issues: 6
+  - Minor Issues: 4
+  - Example detected smell: "Long Method - Function 'processData' is 45 lines"
+- Visual: Simple statistics display
+
+SLIDE 16 - LIMITATIONS & FUTURE ENHANCEMENTS
+- Current Limitations:
+  - Pattern-based detection (vs full AST analysis)
+  - Limited language support
+  - No customizable thresholds
+  - Limited semantic analysis
+- Future Plans:
+  - Support for more languages (Java, C#, Go, Ruby)
+  - AST-based analysis for accuracy
+  - IDE integration (VS Code, IntelliJ)
+  - CI/CD pipeline integration
+  - Machine Learning improvements
+
+SLIDE 17 - CHALLENGES & SOLUTIONS
+- Challenge: Accurate smell detection across languages
+  Solution: Language-specific parsing algorithms
+- Challenge: User accessibility
+  Solution: Web-based interface, no setup required
+- Challenge: Providing actionable insights
+  Solution: Detailed categorization and severity levels
+- Display: Two-column layout (Challenges | Solutions)
+
+SLIDE 18 - CONCLUSION & KEY TAKEAWAYS
+- ✓ Automated detection of multiple code smell types
+- ✓ Multi-language support (JavaScript, Python, TypeScript)
+- ✓ User-friendly web interface
+- ✓ Severity-based prioritization
+- ✓ Comprehensive PDF reporting
+- Final Message: "Improving Code Quality Through Automated Analysis"
+- Visual: Minimalistic conclusion slide with checkmarks
+
+DESIGN NOTES:
+- Each slide should have consistent header styling
+- Use only 2-3 colors: Primary (dark navy/black), Secondary (accent blue), Accent (red/orange for severity)
+- Limit text per slide to essential information
+- Use ample white space between elements
+- No animations - keep it professional and clean
+- Tables should be simple with clear borders
+- Code examples should be displayed in monospace font, dark background
+- Maintain consistent font sizes: Headers (44-56pt), Body (28-32pt), Small text (20-24pt)
+- Include slide numbers for reference
+- Keep minimalistic aesthetic throughout - less is more
+
+TONE:
+- Professional and academic
+- Clear and concise explanations
+- Focus on technical merit and practical application
+- Suitable for university presentation
+- Emphasize innovation and practical value to software development
+
+================================================================================
+COPY THIS ENTIRE TEXT AND PASTE IT INTO GAMMA.AI
+GO TO: https://gamma.app
+CLICK "CREATE" → "FROM PROMPT"
+PASTE THIS TEXT AND GENERATE YOUR PRESENTATION
+================================================================================
