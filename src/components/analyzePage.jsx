@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { generateAnalysisReportPDF } from "@/utils/generatePDF";
 
 export default function AnalyzePage() {
@@ -9,21 +9,56 @@ export default function AnalyzePage() {
 	const [analysisResult, setAnalysisResult] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [selectedCategory, setSelectedCategory] = useState(null);
+	const [selectedSmell, setSelectedSmell] = useState(null);
+	const [codeLines, setCodeLines] = useState([]);
+	const codeViewerRef = useRef(null);
 
 	useEffect(() => {
 		// Retrieve analysis result from localStorage
 		const storedResult = localStorage.getItem("analysisResult");
+		const uploadedCode = localStorage.getItem("uploadedCode");
+		
+		console.log('Stored result:', storedResult);
+		console.log('Uploaded code:', uploadedCode);
+		
 		if (storedResult) {
 			try {
 				const result = JSON.parse(storedResult);
+				console.log('Parsed result:', result);
 				setAnalysisResult(result);
 				setSelectedCategory("BLOATERS"); // Default category
+				
+				// Set up code lines if uploaded code is available
+				if (uploadedCode) {
+					setCodeLines(uploadedCode.split('\n'));
+				}
 			} catch (err) {
 				console.error("Failed to parse analysis result:", err);
 			}
 		}
 		setLoading(false);
 	}, []);
+
+	// Function to scroll to specific line in code viewer
+	const scrollToLine = (lineNumber) => {
+		if (codeViewerRef.current) {
+			const lineElement = document.getElementById(`line-${lineNumber}`);
+			if (lineElement) {
+				lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				// Highlight the line
+				const allLines = codeViewerRef.current.querySelectorAll('.code-line');
+				allLines.forEach(line => line.classList.remove('bg-yellow-500/20'));
+				lineElement.classList.add('bg-yellow-500/20');
+			}
+		}
+	};
+
+	// Handle smell selection
+	const handleSmellSelect = (smell) => {
+		setSelectedSmell(smell);
+		// Scroll to the line after a small delay to ensure DOM is ready
+		setTimeout(() => scrollToLine(smell.line), 100);
+	};
 
 	if (loading) {
 		return (
@@ -97,11 +132,6 @@ export default function AnalyzePage() {
 		return labels[category] || category;
 	};
 
-	const formatDate = (dateString) => {
-		const date = new Date(dateString);
-		return date.toLocaleString();
-	};
-
 	const filteredSmells = selectedCategory
 		? analysisResult.smells.filter((smell) => smell.category === selectedCategory)
 		: analysisResult.smells;
@@ -124,198 +154,188 @@ export default function AnalyzePage() {
 				</button>
 			</div>
 
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
+			<div className="flex flex-col min-h-screen max-w-7xl mx-auto px-4 sm:px-6 pt-4">
 				{/* Header Row */}
-				<div className="flex flex-col gap-6">
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
 					<div>
-						<h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">
+						<h1 className="text-2xl sm:text-3xl font-bold mb-1">
 							{isSampleReport ? "Sample Report" : "Analysis Results"}
 						</h1>
 						<p className="text-slate-400 text-sm">File: {analysisResult.fileName}</p>
 					</div>
 
-					{/* Status + Meta + Actions */}
+					{/* Status + Actions */}
 					{!isSampleReport && (
-					<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-						<div className="flex items-center gap-4 flex-wrap">
+						<div className="flex flex-wrap items-center gap-3">
 							<span className="px-3 py-1 rounded-md bg-green-900/30 text-green-400 border border-green-700/50 text-xs font-bold uppercase tracking-widest">
 								COMPLETED
 							</span>
-							<span className="text-slate-400 text-sm">Analysis Date: <span className="text-slate-200">{formatDate(analysisResult.timestamp)}</span></span>
-						</div>
-
-						<div className="flex items-center gap-3">
-							<a href="/upload" className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 transition-colors text-sm font-semibold">
+							<a href="/upload" className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 transition-colors text-xs font-semibold">
 								Re-analyze
 							</a>
 							<button
 								onClick={() => {
 									generateAnalysisReportPDF(analysisResult);
 								}}
-								className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 transition-colors text-sm font-semibold"
+								className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 transition-colors text-xs font-semibold"
 							>
 								Export Report
 							</button>
 						</div>
-					</div>
 					)}
 				</div>
 
 				{/* Summary Cards */}
-				<div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-					{/* Summary */}
-					<div className="rounded-xl border border-slate-700 p-5" style={{ backgroundColor: "#1C1F26" }}>
-						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Total Smells</p>
-						<div className="flex items-end justify-between">
-							<div>
-								<div className="text-3xl font-bold">{analysisResult.totalSmells}</div>
-								<div className="text-slate-400 text-sm">Code issues found</div>
-							</div>
-							<div className={analysisResult.totalSmells === 0 ? "text-green-400 text-xs" : "text-red-400 text-xs"}>
-								{analysisResult.totalSmells === 0 ? "✓ Good" : "⚠ Refactor Recommended"}
+				<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+					<div className="rounded-lg border border-slate-700 p-3" style={{ backgroundColor: "#1C1F26" }}>
+						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Smells</p>
+						<div className="text-xl font-bold">{analysisResult.totalSmells}</div>
+						<div className="text-slate-400 text-xs">Issues found</div>
+					</div>
+
+					<div className="rounded-lg border border-slate-700 p-3" style={{ backgroundColor: "#1C1F26" }}>
+						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Critical</p>
+						<div className="text-xl font-bold text-red-400">{getSeverityCount("CRITICAL")}</div>
+					</div>
+
+					<div className="rounded-lg border border-slate-700 p-3" style={{ backgroundColor: "#1C1F26" }}>
+						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Major</p>
+						<div className="text-xl font-bold text-orange-400">{getSeverityCount("MAJOR")}</div>
+					</div>
+
+					<div className="rounded-lg border border-slate-700 p-3" style={{ backgroundColor: "#1C1F26" }}>
+						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Minor</p>
+						<div className="text-xl font-bold text-yellow-400">{getSeverityCount("MINOR")}</div>
+					</div>
+				</div>
+
+				{/* Main Content Area - Split View */}
+				<div className="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden" style={{ minHeight: '90vh' }}>
+					{/* Left Panel - Code Smells List */}
+					<div className="w-full md:w-96 flex-shrink-0 flex flex-col border border-slate-700 rounded-lg" style={{ backgroundColor: "#1C1F26" }}>
+						<div className="p-4 border-b border-slate-700">
+							<h2 className="text-lg font-bold mb-3">Code Issues</h2>
+								
+							{/* Category Selector */}
+							<div className="flex flex-wrap gap-2 mb-3">
+								{Object.keys(analysisResult.categories).map((category) => (
+									<button
+										key={category}
+										onClick={() => setSelectedCategory(category)}
+										className={`px-3 py-1.5 rounded font-semibold text-xs transition-colors ${
+											selectedCategory === category
+												? "bg-blue-600 text-white"
+												: "bg-slate-800 text-slate-300 hover:bg-slate-700"
+										}`}
+									>
+										{getCategoryLabel(category).substring(0, 12)}{getCategoryLabel(category).length > 12 ? "..." : ""}
+									</button>
+								))}
 							</div>
 						</div>
-					</div>
 
-					{/* Severity */}
-					<div className="rounded-xl border border-slate-700 p-5" style={{ backgroundColor: "#1C1F26" }}>
-						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Severity</p>
-						<ul className="space-y-2 text-sm">
-							<li className="flex justify-between">
-								<span className="text-slate-300">Critical</span>
-								<span className="text-red-400 font-semibold">{getSeverityCount("CRITICAL")}</span>
-							</li>
-							<li className="flex justify-between">
-								<span className="text-slate-300">Major</span>
-								<span className="text-orange-400 font-semibold">{getSeverityCount("MAJOR")}</span>
-							</li>
-							<li className="flex justify-between">
-								<span className="text-slate-300">Minor</span>
-								<span className="text-yellow-300 font-semibold">{getSeverityCount("MINOR")}</span>
-							</li>
-						</ul>
-					</div>
-
-					{/* Categories Found */}
-					<div className="rounded-xl border border-slate-700 p-5" style={{ backgroundColor: "#1C1F26" }}>
-						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Categories</p>
-						<div className="flex flex-wrap gap-2">
-							{Object.keys(analysisResult.categories).length > 0 ? (
-								Object.keys(analysisResult.categories).map((cat) => (
-									<span key={cat} className="px-2 py-1 text-xs rounded bg-slate-800 text-slate-300">
-										{getCategoryLabel(cat).split(" ")[0]}
-									</span>
-								))
+						{/* Smells List */}
+						<div className="flex-1 overflow-y-auto" style={{ minHeight: '90vh', maxHeight: '90vh' }}>
+							{filteredSmells.length > 0 ? (
+								<div className="space-y-2 p-2">
+									{filteredSmells.map((smell) => {
+										const colors = getCategoryColor(smell.severity);
+										const isSelected = selectedSmell && selectedSmell.id === smell.id;
+										return (
+											<div 
+												key={smell.id}
+												className={`p-3 rounded cursor-pointer transition-colors ${isSelected ? 'bg-blue-900/30 border border-blue-500' : 'hover:bg-slate-800/50 border border-transparent'}`}
+												onClick={() => handleSmellSelect(smell)}
+											>
+												<div className="flex items-start justify-between gap-2">
+													<div className="flex-1 min-w-0">
+														<h3 className="text-slate-200 font-semibold text-sm truncate">{smell.type}</h3>
+														<p className="text-slate-400 text-xs mt-1 truncate">{smell.description}</p>
+														<div className="flex items-center gap-2 mt-2">
+															<span className="text-slate-500 text-xs">Line {smell.line}</span>
+															<span className={`px-2 py-0.5 text-xs rounded border ${colors.bg} ${colors.text} ${colors.border}`}>
+																{smell.severity}
+															</span>
+														</div>
+													</div>
+												</div>
+											</div>
+										);
+									})}
+								</div>
 							) : (
-								<span className="text-slate-400 text-sm">No smells detected</span>
+								<div className="p-6 text-center text-slate-500 text-sm">
+									No smells found in this category
+								</div>
 							)}
 						</div>
 					</div>
 
-					{/* Metrics */}
-					<div className="rounded-xl border border-slate-700 p-5" style={{ backgroundColor: "#1C1F26" }}>
-						<p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Metrics</p>
-						<ul className="space-y-2 text-sm">
-							<li className="flex justify-between">
-								<span className="text-slate-300">Files Scanned</span>
-								<span className="text-slate-100 font-semibold">{analysisResult.metrics.filesScanned}</span>
-							</li>
-							<li className="flex justify-between">
-								<span className="text-slate-300">Total Lines</span>
-								<span className="text-slate-100 font-semibold">{analysisResult.metrics.totalLines}</span>
-							</li>
-							<li className="flex justify-between">
-								<span className="text-slate-300">Refactor Candidates</span>
-								<span className="text-slate-100 font-semibold">{analysisResult.metrics.refactorCandidates}</span>
-							</li>
-						</ul>
-					</div>
-				</div>
+					{/* Right Panel - Code Viewer */}
+					<div className="flex-1 flex flex-col border border-slate-700 rounded-lg overflow-hidden" style={{ backgroundColor: "#1C1F26" }}>
+						<div className="p-4 border-b border-slate-700">
+							<h2 className="text-lg font-bold">Code Viewer</h2>
+							<p className="text-slate-400 text-sm mt-1">{analysisResult.fileName} - {codeLines.length} lines</p>
+						</div>
 
-				{/* Category Tabs and Details */}
-				<div className="mt-8">
-					{/* Category Selector */}
-					<div className="flex flex-wrap gap-2 mb-6">
-						{Object.keys(analysisResult.categories).map((category) => (
-							<button
-								key={category}
-								onClick={() => setSelectedCategory(category)}
-								className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-									selectedCategory === category
-										? "bg-blue-600 text-white"
-										: "bg-slate-800 text-slate-300 hover:bg-slate-700"
-								}`}
-							>
-								{getCategoryLabel(category)} ({analysisResult.categories[category].length})
-							</button>
-						))}
-					</div>
-
-					{/* Detailed Smells List */}
-					{filteredSmells.length > 0 ? (
-						<div className="rounded-xl border border-slate-700 p-6" style={{ backgroundColor: "#1C1F26" }}>
-							<h2 className="text-lg font-bold mb-4">
-								{selectedCategory ? getCategoryLabel(selectedCategory) : "All Smells"} ({filteredSmells.length})
-							</h2>
-							<div className="space-y-4">
-								{filteredSmells.map((smell) => {
-									const colors = getCategoryColor(smell.severity);
+						<div 
+							ref={codeViewerRef}
+							className="flex-1 overflow-y-auto font-mono text-sm p-4 bg-slate-900/50" 
+							style={{ minHeight: '90vh', maxHeight: '90vh' }}
+						>
+							{codeLines.length > 0 ? (
+								codeLines.map((line, index) => {
+									const lineNumber = index + 1;
 									return (
-										<div key={smell.id} className="border border-slate-700 rounded-lg p-4 hover:bg-slate-800/50 transition-colors">
-											<div className="flex items-start justify-between gap-4">
-												<div className="flex-1">
-													<div className="flex items-center gap-3 mb-2">
-														<h3 className="text-slate-200 font-semibold">{smell.type}</h3>
-														<span className={`px-2 py-1 text-xs rounded border ${colors.bg} ${colors.text} ${colors.border}`}>
-															{smell.severity}
-														</span>
-													</div>
-													<p className="text-slate-400 text-sm mb-2">{smell.description}</p>
-													<div className="flex items-center gap-4 text-xs text-slate-500">
-														<span>Line {smell.line}</span>
-														<span>{smell.file}</span>
-													</div>
-												</div>
-											</div>
+										<div 
+											key={index}
+											id={`line-${lineNumber}`}
+											className="code-line py-1 flex hover:bg-slate-800/30"
+										>
+											<span className="text-slate-500 select-none w-12 flex-shrink-0 text-right pr-4">
+												{lineNumber}
+											</span>
+											<span className="text-slate-200">
+												{line}
+											</span>
 										</div>
 									);
-								})}
-							</div>
+								})
+							) : (
+								<div className="flex items-center justify-center h-full text-slate-500">
+									<p>No code available to display</p>
+								</div>
+							)}
 						</div>
-					) : (
-						<div className="rounded-xl border border-slate-700 p-8 text-center" style={{ backgroundColor: "#1C1F26" }}>
-							<p className="text-slate-400 mb-4">No smells found in this category</p>
-							<p className="text-slate-500 text-sm">Great code quality!</p>
-						</div>
-					)}
+					</div>
 				</div>
 
 				{/* Recommendations */}
 				{analysisResult.totalSmells > 0 && (
-					<div className="mt-8 rounded-xl border border-slate-700 p-6" style={{ backgroundColor: "#1C1F26" }}>
-						<h2 className="text-lg font-bold mb-4">Refactoring Recommendations</h2>
-						<ul className="space-y-3 text-slate-300 text-sm">
+					<div className="mt-6 rounded-lg border border-slate-700 p-4" style={{ backgroundColor: "#1C1F26" }}>
+						<h2 className="text-base font-bold mb-3">Refactoring Recommendations</h2>
+						<ul className="space-y-2 text-slate-300 text-sm">
 							{getSeverityCount("CRITICAL") > 0 && (
-								<li className="flex gap-3">
+								<li className="flex gap-2">
 									<span className="text-red-400 font-bold">•</span>
-									<span>Address <strong>{getSeverityCount("CRITICAL")} critical</strong> code smell(s) immediately - they severely impact code quality and maintainability.</span>
+									<span>Address <strong>{getSeverityCount("CRITICAL")} critical</strong> code smell(s) immediately.</span>
 								</li>
 							)}
 							{getSeverityCount("MAJOR") > 0 && (
-								<li className="flex gap-3">
+								<li className="flex gap-2">
 									<span className="text-orange-400 font-bold">•</span>
-									<span>Fix <strong>{getSeverityCount("MAJOR")} major</strong> code smell(s) - these indicate significant design issues.</span>
+									<span>Fix <strong>{getSeverityCount("MAJOR")} major</strong> code smell(s) to improve design quality.</span>
 								</li>
 							)}
 							{getSeverityCount("MINOR") > 0 && (
-								<li className="flex gap-3">
+								<li className="flex gap-2">
 									<span className="text-yellow-400 font-bold">•</span>
-									<span>Consider refactoring <strong>{getSeverityCount("MINOR")} minor</strong> code smell(s) for improved code quality.</span>
+									<span>Consider refactoring <strong>{getSeverityCount("MINOR")} minor</strong> code smell(s).</span>
 								</li>
 							)}
-							<li className="flex gap-3 mt-4 pt-4 border-t border-slate-700">
+							<li className="flex gap-2 mt-2 pt-2 border-t border-slate-700">
 								<span className="text-blue-400 font-bold">→</span>
-								<span>Use the specific line numbers provided to locate and fix each issue in your code.</span>
+								<span>Click on any issue to view and highlight it in the code.</span>
 							</li>
 						</ul>
 					</div>
@@ -323,7 +343,7 @@ export default function AnalyzePage() {
 			</div>
 
 			{/* Footer */}
-			<footer className="border-t border-slate-700 bg-slate-950 py-6 sm:py-8 text-center mt-12">
+			<footer className="border-t border-slate-700 bg-slate-950 py-4 text-center mt-4">
 				<p className="text-slate-500 text-xs">© 2025 Code Smell Detection Tool. All rights reserved.</p>
 			</footer>
 		</main>
